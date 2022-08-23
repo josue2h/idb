@@ -1,24 +1,32 @@
-import { Inject, Injectable } from "@angular/core";
-import { IDBPDatabase, openDB } from "idb";
-import { from, Observable } from "rxjs";
+import { Inject, Injectable } from '@angular/core';
+import { IDBPDatabase, openDB } from 'idb';
+import { from, Observable, of } from 'rxjs';
+import { Student } from '../models/Student';
 
-@Injectable({ providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class SchoolService {
-  db: Promise<IDBPDatabase>;
-constructor(){
-}
+  db: any;
+  constructor() {
+    this.initializeDB();
+  }
 
-initializeDB(): Observable<any> {
-  return from(openDB('db-school', 1, {
-    upgrade(dbs) {
-      dbs.createObjectStore('tabla-person');
+  async initializeDB(): Promise<void> {
+    this.db = await openDB('db-school', 1, {
+      upgrade(dbs) {
+        dbs.createObjectStore('tabla-person');
+        const store = dbs.createObjectStore('person', {
+          keyPath: 'idPerson',
+          autoIncrement: true,
+        });
+      },
+    });
+  }
 
-      const store = dbs.createObjectStore('person', {
-        keyPath: 'idPerson',
-        autoIncrement: true,
-      });
-    },
-  }));
-}
+  addStudent(student: Student): Observable<any> {
+    return of(this.db.add(student));
+  }
 
+  getList(): Observable<any> {
+    return of(this.db.getAll('tabla-person'));
+  }
 }
